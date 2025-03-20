@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:airport_search_project/view/constants/urls.dart';
 import 'package:airport_search_project/view/sorting_page/model/airport_model.dart';
 import 'package:http/http.dart' as http;
 

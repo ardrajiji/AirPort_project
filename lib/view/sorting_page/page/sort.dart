@@ -11,10 +11,14 @@ class AirportListPage extends StatefulWidget {
 
 class _AirportListPageState extends State<AirportListPage> {
   bool isAscending = true;
+  bool isLoading = false;
+  String selectedButton = 'All Airport';
   List<Source> airports = [];
 
   void sortAirports(bool ascending) {
     setState(() {
+      isAscending = ascending;
+      selectedButton = ascending ? 'A to Z' : 'Z to A';
       if (ascending) {
         airports.sort((a, b) => a.countryname!.compareTo(b.countryname!));
       } else {
@@ -24,10 +28,18 @@ class _AirportListPageState extends State<AirportListPage> {
   }
 
   void fetchAirports() async {
-    final airportModel = await airportListService();
     setState(() {
-      airports = airportModel.hits?.hits?.map((hit) => hit.source!).toList() ?? [];
+      isLoading = true;
+      selectedButton = 'All Airport';
     });
+    try {
+      final airportModel = await airportListService();
+      setState(() {
+        airports = airportModel.hits?.hits?.map((hit) => hit.source!).toList() ?? [];
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -38,6 +50,9 @@ class _AirportListPageState extends State<AirportListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final bool isPortrait = screenSize.height > screenSize.width;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sort'),
@@ -45,87 +60,81 @@ class _AirportListPageState extends State<AirportListPage> {
         shadowColor: Colors.black87,
         backgroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: fetchAirports,
-                style: ElevatedButton.styleFrom(
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 1,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('All Airport', style: TextStyle(color: Colors.black)),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () => sortAirports(true),
-                style: ElevatedButton.styleFrom(
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 1,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('A to Z', style: TextStyle(color: Colors.black)),
-              ),
-              ElevatedButton(
-                onPressed: () => sortAirports(false),
-                style: ElevatedButton.styleFrom(
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 1,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Z to A', style: TextStyle(color: Colors.black)),
-              ),
-            ],
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: airports.length,
-              itemBuilder: (context, index) {
-                final airport = airports[index];
-                return Column(
-                  children: [
-                    SizedBox(height: 3),
-                    Divider(thickness: 1),
-                    ListTile(
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          SizedBox(width: 15),
-                          Text(
-                            "${airport.code} ",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 13),
-                          Text(
-                            "${airport.city} - ${airport.countryname}",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05),
+        child: Column(
+          children: [
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildButton('All Airport', fetchAirports, screenSize),
+                const SizedBox(width: 10),
+                _buildButton('A to Z', () => sortAirports(true), screenSize),
+                _buildButton('Z to A', () => sortAirports(false), screenSize),
+              ],
             ),
-          ),
-        ],
+            Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: airports.length,
+                      itemBuilder: (context, index) {
+                        final airport = airports[index];
+                        return Column(
+                          children: [
+                            const SizedBox(height: 3),
+                            const Divider(thickness: 1),
+                            ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: isPortrait ? 15 : 40,
+                              ),
+                              title: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${airport.code} ",
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(width: 13),
+                                  Flexible(
+                                    child: Text(
+                                      "${airport.city} - ${airport.countryname}",
+                                      style: const TextStyle(fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildButton(String title, VoidCallback onPressed, Size screenSize) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: selectedButton == title
+            ? const Color.fromARGB(214, 240, 238, 238)
+            : Colors.white,
+        side: const BorderSide(
+          color: Colors.black,
+          width: 1,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        minimumSize: Size(screenSize.width * 0.25, 40),
+      ),
+      child: Text(title, style: const TextStyle(color: Colors.black)),
     );
   }
 }

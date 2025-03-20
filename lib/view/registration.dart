@@ -20,22 +20,22 @@ class _RegistrationFormState extends State<RegistrationForm> {
     return null;
   }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email is required';
-    }
-
-    // Corrected and improved regex for email validation
-    final emailRegex = RegExp(
-      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
-
-    if (!emailRegex.hasMatch(value)) {
-      return 'Enter a valid email address';
-    }
-
-    return null;
+ String? _validateEmail(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Email is required';
   }
+
+  final emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
+  if (!emailRegex.hasMatch(value.trim())) {
+    return 'Enter a valid email address';
+  }
+
+  return null;
+}
+
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'Password is required';
@@ -43,42 +43,40 @@ class _RegistrationFormState extends State<RegistrationForm> {
     return null;
   }
 
- void _submitForm() {
-  if (_formKey.currentState!.validate()) {
-    // Show SnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Registration Successful!')),
-    );
-
-    // Clear the form fields
-    _nameController.clear();
-    _emailController.clear();
-    _passwordController.clear();
-
-    // Navigate to SortPage after a short delay
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => AirportListPage()),
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration Successful!')),
       );
-    });
-  }
-}
 
+      _nameController.clear();
+      _emailController.clear();
+      _passwordController.clear();
+
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => AirportListPage()),
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('WELCOME'),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 208, 246, 246),
+        backgroundColor: Colors.white,
       ),
-      body:
-       Center(
+      body: Center(
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.8,
-          padding: const EdgeInsets.all(16.0),
+          width: screenWidth * 0.8,
+          padding: EdgeInsets.all(screenWidth * 0.04),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
@@ -96,50 +94,45 @@ class _RegistrationFormState extends State<RegistrationForm> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: screenHeight * 0.02),
                 Center(
-                  child: 
-                  Text(
+                  child: Text(
                     "Registration",
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: screenWidth * 0.07,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                       letterSpacing: 1.5,
-                      
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: screenHeight * 0.01),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Name',
                     hintText: 'Enter your name',
-                    
-
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                   validator: _validateName,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: screenHeight * 0.02),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'Enter your email',
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                   ),
                   validator: _validateEmail,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: screenHeight * 0.02),
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     hintText: 'Enter your password',
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible
@@ -156,32 +149,31 @@ class _RegistrationFormState extends State<RegistrationForm> {
                   obscureText: !_isPasswordVisible,
                   validator: _validatePassword,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.04),
                 ElevatedButton(
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 238, 241, 241),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.1,
+                        vertical: screenHeight * 0.02),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 5,
                     shadowColor: Colors.grey,
                   ),
-                  child: const Text(
+                  child: Text(
                     'Register',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: screenWidth * 0.05,
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
+                SizedBox(height: screenHeight * 0.04),
               ],
             ),
           ),
